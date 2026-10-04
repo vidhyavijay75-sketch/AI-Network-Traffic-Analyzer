@@ -1,0 +1,1521 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Network Traffic Analyzer</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 1100px;
+            margin: 30px auto;
+        }
+
+        .header {
+            background: #1e3a8a;
+            color: white;
+            padding: 28px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+        }
+
+        .header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            color: #1e3a8a;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-top: -5px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .input-group input {
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        .button-row {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            padding: 12px 22px;
+            border-radius: 7px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+        }
+
+        .predict-btn {
+            background: #2563eb;
+        }
+
+        .start-btn {
+            background: #16a34a;
+        }
+
+        .stop-btn {
+            background: #dc2626;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .result-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 18px;
+            border-radius: 9px;
+            text-align: center;
+        }
+
+        .result-box span {
+            display: block;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .result-box strong {
+            font-size: 24px;
+        }
+
+        .risk-area {
+            margin-top: 20px;
+        }
+
+        .risk-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .risk-track {
+            height: 18px;
+            background: #e2e8f0;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        #riskBar {
+            height: 100%;
+            width: 0%;
+            background: #22c55e;
+            transition: width 0.5s;
+        }
+
+        #message {
+            margin-top: 15px;
+            color: #475569;
+            font-weight: bold;
+        }
+
+        .monitor-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .monitor-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .monitor-item span {
+            display: block;
+            color: #64748b;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .monitor-item strong {
+            font-size: 18px;
+        }
+
+        #monitorStatus {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .alert {
+            display: none;
+            margin-top: 15px;
+            padding: 14px;
+            background: #fee2e2;
+            color: #991b1b;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        /* GRAPH */
+
+        .chart-container {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            background: white;
+        }
+
+        #trafficChart {
+            width: 100%;
+            height: 320px;
+            display: block;
+        }
+
+        .graph-legend {
+            display: flex;
+            gap: 25px;
+            margin-top: 10px;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .legend-box {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .blue {
+            background: #2563eb;
+        }
+
+        .orange {
+            background: #f97316;
+        }
+
+        .history-wrapper {
+            overflow-x: auto;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .history-table th {
+            background: #f8fafc;
+        }
+
+        .empty-history {
+            color: #64748b;
+        }
+
+        .footer {
+            text-align: center;
+            color: #64748b;
+            padding: 25px;
+        }
+
+        @media (max-width: 800px) {
+
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .monitor-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 500px) {
+
+            .container {
+                width: 95%;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .monitor-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+
+    <div class="header">
+        <h1>AI-Based Network Traffic Analyzer</h1>
+        <p>Congestion Prediction and Real-Time Network Monitoring System</p>
+    </div>
+
+
+    <!-- INPUT -->
+
+    <div class="card">
+
+        <h2>Network Traffic Input</h2>
+
+        <p class="subtitle">
+            Enter network traffic parameters for congestion prediction
+        </p>
+
+        <div class="input-grid">
+
+            <div class="input-group">
+                <label>Bandwidth Usage (Mbps)</label>
+                <input
+                    type="number"
+                    id="bandwidth_usage"
+                    value="50"
+                    min="0"
+                    step="0.01"
+                >
+            </div>
+
+            <div class="input-group">
+                <label>Packets Per Second</label>
+                <input
+                    type="number"
+                    id="packets_per_second"
+                    value="5000"
+                    min="0"
+                    step="1"
+                >
+            </div>
+
+            <div class="input-group">
+                <label>Bytes Per Second</label>
+                <input
+                    type="number"
+                    id="bytes_per_second"
+                    value="6250000"
+                    min="0"
+                    step="1"
+                >
+            </div>
+
+            <div class="input-group">
+                <label>Latency (ms)</label>
+                <input
+                    type="number"
+                    id="latency"
+                    value="50"
+                    min="0"
+                    step="0.01"
+                >
+            </div>
+
+            <div class="input-group">
+                <label>Packet Loss (%)</label>
+                <input
+                    type="number"
+                    id="packet_loss"
+                    value="1"
+                    min="0"
+                    step="0.01"
+                >
+            </div>
+
+            <div class="input-group">
+                <label>Network Utilization (%)</label>
+                <input
+                    type="number"
+                    id="network_utilization"
+                    value="60"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                >
+            </div>
+
+            <div class="input-group">
+                <label>Connection Count</label>
+                <input
+                    type="number"
+                    id="connection_count"
+                    value="250"
+                    min="0"
+                    step="1"
+                >
+            </div>
+
+        </div>
+
+        <div class="button-row">
+
+            <button
+                class="predict-btn"
+                type="button"
+                onclick="predictTraffic()"
+            >
+                Predict Congestion
+            </button>
+
+        </div>
+
+        <div id="message">
+            Ready for prediction.
+        </div>
+
+    </div>
+
+
+    <!-- PREDICTION RESULT -->
+
+    <div class="card">
+
+        <h2>Prediction Result</h2>
+
+        <div class="result-grid">
+
+            <div class="result-box">
+                <span>Network Status</span>
+                <strong id="statusValue">-</strong>
+            </div>
+
+            <div class="result-box">
+                <span>Confidence</span>
+                <strong id="confidenceValue">-</strong>
+            </div>
+
+            <div class="result-box">
+                <span>Risk</span>
+                <strong id="riskValue">-</strong>
+            </div>
+
+        </div>
+
+        <div class="risk-area">
+
+            <div class="risk-header">
+                <strong>Risk Level</strong>
+                <strong id="riskText">0%</strong>
+            </div>
+
+            <div class="risk-track">
+                <div id="riskBar"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- REAL-TIME MONITORING -->
+
+    <div class="card">
+
+        <h2>Real-Time Traffic Monitoring</h2>
+
+        <p class="subtitle">
+            Simulated live network traffic monitoring
+        </p>
+
+        <div class="button-row">
+
+            <button
+                class="start-btn"
+                type="button"
+                onclick="startMonitoring()"
+            >
+                Start Monitoring
+            </button>
+
+            <button
+                class="stop-btn"
+                type="button"
+                onclick="stopMonitoring()"
+            >
+                Stop Monitoring
+            </button>
+
+        </div>
+
+        <p id="monitorStatus">
+            Monitoring stopped
+        </p>
+
+        <div class="monitor-grid">
+
+            <div class="monitor-item">
+                <span>Bandwidth</span>
+                <strong id="monitorBandwidth">-</strong>
+            </div>
+
+            <div class="monitor-item">
+                <span>Packets/sec</span>
+                <strong id="monitorPackets">-</strong>
+            </div>
+
+            <div class="monitor-item">
+                <span>Latency</span>
+                <strong id="monitorLatency">-</strong>
+            </div>
+
+            <div class="monitor-item">
+                <span>Packet Loss</span>
+                <strong id="monitorLoss">-</strong>
+            </div>
+
+            <div class="monitor-item">
+                <span>Utilization</span>
+                <strong id="monitorUtilization">-</strong>
+            </div>
+
+            <div class="monitor-item">
+                <span>Connections</span>
+                <strong id="monitorConnections">-</strong>
+            </div>
+
+            <div class="monitor-item">
+                <span>Bytes/sec</span>
+                <strong id="monitorBytes">-</strong>
+            </div>
+
+            <div class="monitor-item">
+                <span>Status</span>
+                <strong id="monitorPrediction">-</strong>
+            </div>
+
+        </div>
+
+        <div
+            id="alertBox"
+            class="alert"
+        ></div>
+
+    </div>
+
+
+    <!-- REAL-TIME GRAPH -->
+
+    <div class="card">
+
+        <h2>Real-Time Traffic Graph</h2>
+
+        <p class="subtitle">
+            Live network utilization and latency monitoring
+        </p>
+
+        <div class="chart-container">
+
+            <canvas id="trafficChart"></canvas>
+
+            <div class="graph-legend">
+
+                <div class="legend-item">
+                    <span class="legend-box blue"></span>
+                    <span>Network Utilization (%)</span>
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-box orange"></span>
+                    <span>Latency (ms)</span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- PREDICTION HISTORY -->
+
+    <div
+        class="card"
+        id="historySection"
+    >
+
+        <h2>Prediction History</h2>
+
+        <p class="subtitle">
+            Latest network congestion predictions
+        </p>
+
+        <div class="history-wrapper">
+
+            <table class="history-table">
+
+                <thead>
+
+                    <tr>
+                        <th>Time</th>
+                        <th>Network Status</th>
+                        <th>Confidence</th>
+                        <th>Risk</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="historyTable">
+
+                    <tr id="emptyHistory">
+
+                        <td
+                            colspan="4"
+                            class="empty-history"
+                        >
+                            No predictions yet
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div class="footer">
+        AI-Based Network Traffic Analyzer and Congestion Prediction System
+    </div>
+
+</div>
+
+
+<script>
+
+let monitoringInterval = null;
+
+let chartData = [];
+
+const maxChartPoints = 10;
+
+
+/* GET INPUT VALUES */
+
+function getInputData() {
+
+    return {
+
+        bandwidth_usage:
+            Number(document.getElementById("bandwidth_usage").value),
+
+        packets_per_second:
+            Number(document.getElementById("packets_per_second").value),
+
+        bytes_per_second:
+            Number(document.getElementById("bytes_per_second").value),
+
+        latency:
+            Number(document.getElementById("latency").value),
+
+        packet_loss:
+            Number(document.getElementById("packet_loss").value),
+
+        network_utilization:
+            Number(document.getElementById("network_utilization").value),
+
+        connection_count:
+            Number(document.getElementById("connection_count").value)
+
+    };
+
+}
+
+
+/* MANUAL PREDICTION */
+
+async function predictTraffic() {
+
+    const data = getInputData();
+
+    const values = Object.values(data);
+
+    if (values.some(value => !Number.isFinite(value))) {
+
+        document.getElementById("message").innerText =
+            "Please enter valid numbers in all fields.";
+
+        return;
+    }
+
+    try {
+
+        document.getElementById("message").innerText =
+            "Predicting...";
+
+        const response = await fetch("/predict", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify(data)
+
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                result.error || "Prediction failed"
+            );
+
+        }
+
+        updateResult(result);
+
+    }
+
+    catch (error) {
+
+        document.getElementById("message").innerText =
+            "Error: " + error.message;
+
+    }
+
+}
+
+
+/* UPDATE RESULT */
+
+function updateResult(result) {
+
+    document.getElementById("statusValue").innerText =
+        result.congestion_level;
+
+    document.getElementById("confidenceValue").innerText =
+        result.confidence + "%";
+
+    document.getElementById("riskValue").innerText =
+        result.risk_percentage + "%";
+
+    let risk = Number(result.risk_percentage);
+
+    if (!Number.isFinite(risk)) {
+        risk = 0;
+    }
+
+    risk = Math.max(0, Math.min(100, risk));
+
+    document.getElementById("riskText").innerText =
+        risk + "%";
+
+    document.getElementById("riskBar").style.width =
+        risk + "%";
+
+
+    const status = result.congestion_level;
+
+    let riskColor = "#22c55e";
+
+    if (status === "Medium") {
+
+        riskColor = "#eab308";
+
+    }
+
+    else if (status === "High") {
+
+        riskColor = "#f97316";
+
+    }
+
+    else if (status === "Congestion") {
+
+        riskColor = "#dc2626";
+
+    }
+
+    document.getElementById("riskBar").style.background =
+        riskColor;
+
+
+    document.getElementById("message").innerText =
+        "Prediction completed successfully.";
+
+
+    addHistory(result);
+
+
+    const alertBox =
+        document.getElementById("alertBox");
+
+    if (
+        status === "High" ||
+        status === "Congestion"
+    ) {
+
+        alertBox.style.display = "block";
+
+        alertBox.innerText =
+            "⚠ Network congestion detected! Status: " +
+            status;
+
+    }
+
+    else {
+
+        alertBox.style.display = "none";
+
+    }
+
+}
+
+
+/* PREDICTION HISTORY */
+
+function addHistory(result) {
+
+    const table =
+        document.getElementById("historyTable");
+
+    const emptyRow =
+        document.getElementById("emptyHistory");
+
+    if (!table) {
+        return;
+    }
+
+    if (emptyRow) {
+        emptyRow.remove();
+    }
+
+    const row =
+        document.createElement("tr");
+
+    const now =
+        new Date().toLocaleTimeString();
+
+    row.innerHTML = `
+        <td>${now}</td>
+        <td>${result.congestion_level}</td>
+        <td>${result.confidence}%</td>
+        <td>${result.risk_percentage}%</td>
+    `;
+
+    table.prepend(row);
+
+    while (table.rows.length > 10) {
+
+        table.deleteRow(
+            table.rows.length - 1
+        );
+
+    }
+
+}
+
+
+/* REAL-TIME GRAPH */
+
+function updateTrafficChart(data) {
+
+    const utilization =
+        Number(data.network_utilization);
+
+    const latency =
+        Number(data.latency);
+
+
+    if (
+        !Number.isFinite(utilization) ||
+        !Number.isFinite(latency)
+    ) {
+
+        return;
+
+    }
+
+
+    chartData.push({
+
+        utilization:
+            Math.max(
+                0,
+                Math.min(100, utilization)
+            ),
+
+        latency:
+            Math.max(
+                0,
+                Math.min(100, latency)
+            )
+
+    });
+
+
+    if (chartData.length > maxChartPoints) {
+
+        chartData.shift();
+
+    }
+
+
+    const canvas =
+        document.getElementById("trafficChart");
+
+    if (!canvas) {
+
+        console.log("Graph canvas not found");
+
+        return;
+
+    }
+
+
+    const ctx =
+        canvas.getContext("2d");
+
+    if (!ctx) {
+
+        return;
+
+    }
+
+
+    const width =
+        canvas.clientWidth || 900;
+
+    const height = 320;
+
+
+    canvas.width = width;
+
+    canvas.height = height;
+
+
+    ctx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    /* BACKGROUND */
+
+    ctx.fillStyle = "#f8fafc";
+
+    ctx.fillRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    /* GRID */
+
+    ctx.strokeStyle = "#e2e8f0";
+
+    ctx.lineWidth = 1;
+
+
+    for (let i = 0; i <= 5; i++) {
+
+        const y =
+            30 + i * 45;
+
+        ctx.beginPath();
+
+        ctx.moveTo(50, y);
+
+        ctx.lineTo(
+            width - 20,
+            y
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    /* Y AXIS */
+
+    ctx.fillStyle = "#475569";
+
+    ctx.font = "12px Arial";
+
+    ctx.fillText("100", 15, 35);
+
+    ctx.fillText("75", 20, 80);
+
+    ctx.fillText("50", 20, 125);
+
+    ctx.fillText("25", 20, 170);
+
+    ctx.fillText("0", 25, 255);
+
+
+    if (chartData.length > 0) {
+
+        const plotWidth =
+            Math.max(
+                width - 80,
+                1
+            );
+
+        const count =
+            Math.max(
+                chartData.length - 1,
+                1
+            );
+
+
+        /* UTILIZATION LINE */
+
+        ctx.beginPath();
+
+        chartData.forEach(
+            (item, index) => {
+
+                const x =
+                    50 +
+                    index *
+                    (plotWidth / count);
+
+                const y =
+                    255 -
+                    (item.utilization / 100) *
+                    200;
+
+
+                if (index === 0) {
+
+                    ctx.moveTo(x, y);
+
+                }
+
+                else {
+
+                    ctx.lineTo(x, y);
+
+                }
+
+            }
+        );
+
+        ctx.strokeStyle = "#2563eb";
+
+        ctx.lineWidth = 3;
+
+        ctx.stroke();
+
+
+        /* UTILIZATION POINTS */
+
+        ctx.fillStyle = "#2563eb";
+
+        chartData.forEach(
+            (item, index) => {
+
+                const x =
+                    50 +
+                    index *
+                    (plotWidth / count);
+
+                const y =
+                    255 -
+                    (item.utilization / 100) *
+                    200;
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    x,
+                    y,
+                    4,
+                    0,
+                    Math.PI * 2
+                );
+
+                ctx.fill();
+
+            }
+        );
+
+
+        /* LATENCY LINE */
+
+        ctx.beginPath();
+
+        chartData.forEach(
+            (item, index) => {
+
+                const x =
+                    50 +
+                    index *
+                    (plotWidth / count);
+
+                const y =
+                    255 -
+                    (item.latency / 100) *
+                    200;
+
+
+                if (index === 0) {
+
+                    ctx.moveTo(x, y);
+
+                }
+
+                else {
+
+                    ctx.lineTo(x, y);
+
+                }
+
+            }
+        );
+
+        ctx.strokeStyle = "#f97316";
+
+        ctx.lineWidth = 3;
+
+        ctx.stroke();
+
+
+        /* LATENCY POINTS */
+
+        ctx.fillStyle = "#f97316";
+
+        chartData.forEach(
+            (item, index) => {
+
+                const x =
+                    50 +
+                    index *
+                    (plotWidth / count);
+
+                const y =
+                    255 -
+                    (item.latency / 100) *
+                    200;
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    x,
+                    y,
+                    4,
+                    0,
+                    Math.PI * 2
+                );
+
+                ctx.fill();
+
+            }
+        );
+
+    }
+
+
+    /* X AXIS */
+
+    ctx.strokeStyle = "#94a3b8";
+
+    ctx.lineWidth = 1;
+
+    ctx.beginPath();
+
+    ctx.moveTo(50, 255);
+
+    ctx.lineTo(
+        width - 20,
+        255
+    );
+
+    ctx.stroke();
+
+
+    /* LEGEND */
+
+    ctx.fillStyle = "#2563eb";
+
+    ctx.fillRect(
+        60,
+        275,
+        12,
+        12
+    );
+
+    ctx.fillStyle = "#475569";
+
+    ctx.font = "12px Arial";
+
+    ctx.fillText(
+        "Utilization",
+        78,
+        285
+    );
+
+
+    ctx.fillStyle = "#f97316";
+
+    ctx.fillRect(
+        180,
+        275,
+        12,
+        12
+    );
+
+    ctx.fillStyle = "#475569";
+
+    ctx.fillText(
+        "Latency",
+        198,
+        285
+    );
+
+}
+
+
+/* GENERATE LIVE TRAFFIC */
+
+function generateTraffic() {
+
+    const bandwidth =
+        Math.floor(
+            Math.random() * 80 + 20
+        );
+
+    const packets =
+        Math.floor(
+            Math.random() * 7000 + 3000
+        );
+
+    const bytes =
+        Math.floor(
+            bandwidth * 125000
+        );
+
+    const latency =
+        Math.floor(
+            Math.random() * 70 + 20
+        );
+
+    const packetLoss =
+        Number(
+            (
+                Math.random() * 2
+            ).toFixed(2)
+        );
+
+    const utilization =
+        Math.floor(
+            Math.random() * 60 + 30
+        );
+
+    const connections =
+        Math.floor(
+            Math.random() * 400 + 100
+        );
+
+
+    return {
+
+        bandwidth_usage: bandwidth,
+
+        packets_per_second: packets,
+
+        bytes_per_second: bytes,
+
+        latency: latency,
+
+        packet_loss: packetLoss,
+
+        network_utilization: utilization,
+
+        connection_count: connections
+
+    };
+
+}
+
+
+/* LIVE PREDICTION */
+
+async function predictLiveTraffic() {
+
+    const data =
+        generateTraffic();
+
+
+    /* UPDATE GRAPH */
+
+    updateTrafficChart(data);
+
+
+    /* UPDATE MONITOR VALUES */
+
+    document.getElementById(
+        "monitorBandwidth"
+    ).innerText =
+        data.bandwidth_usage + " Mbps";
+
+
+    document.getElementById(
+        "monitorPackets"
+    ).innerText =
+        data.packets_per_second;
+
+
+    document.getElementById(
+        "monitorLatency"
+    ).innerText =
+        data.latency + " ms";
+
+
+    document.getElementById(
+        "monitorLoss"
+    ).innerText =
+        data.packet_loss + "%";
+
+
+    document.getElementById(
+        "monitorUtilization"
+    ).innerText =
+        data.network_utilization + "%";
+
+
+    document.getElementById(
+        "monitorConnections"
+    ).innerText =
+        data.connection_count;
+
+
+    document.getElementById(
+        "monitorBytes"
+    ).innerText =
+        data.bytes_per_second;
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/predict",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify(data)
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                result.error ||
+                "Prediction failed"
+            );
+
+        }
+
+
+        document.getElementById(
+            "monitorPrediction"
+        ).innerText =
+            result.congestion_level;
+
+
+        updateResult(result);
+
+
+        document.getElementById(
+            "monitorStatus"
+        ).innerText =
+            "Monitoring active - updated just now";
+
+    }
+
+    catch (error) {
+
+        document.getElementById(
+            "monitorStatus"
+        ).innerText =
+            "Monitoring error: " +
+            error.message;
+
+    }
+
+}
+
+
+/* START MONITORING */
+
+function startMonitoring() {
+
+    if (monitoringInterval) {
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "monitorStatus"
+    ).innerText =
+        "Monitoring started";
+
+
+    /* FIRST UPDATE */
+
+    predictLiveTraffic();
+
+
+    /* EVERY 3 SECONDS */
+
+    monitoringInterval =
+        setInterval(
+            predictLiveTraffic,
+            3000
+        );
+
+}
+
+
+/* STOP MONITORING */
+
+function stopMonitoring() {
+
+    if (monitoringInterval) {
+
+        clearInterval(
+            monitoringInterval
+        );
+
+        monitoringInterval = null;
+
+    }
+
+
+    document.getElementById(
+        "monitorStatus"
+    ).innerText =
+        "Monitoring stopped";
+
+}
+
+
+/* INITIAL GRAPH */
+
+window.addEventListener(
+    "load",
+    function () {
+
+        updateTrafficChart({
+
+            network_utilization: 0,
+
+            latency: 0
+
+        });
+
+    }
+);
+
+</script>
+
+</body>
+</html>
